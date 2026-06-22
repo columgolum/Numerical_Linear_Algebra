@@ -38,19 +38,14 @@ The primary motivation behind this build is to develop a deep, computational und
 
 ---
 
-## Repository Structure
+##  Repository Structure
 
-Here is how the repository is organized to help you navigate the project:
-
-* **`README.md` (Current):** Acts as the high-level overview of the project and guides you on what to explore next.
-* **`phase_wise_plan`:** This file details the step-by-step execution roadmap and the chronological addition of features.
-* **Phase-Wise Folders:** The core of the project is divided into consecutive development phases. Each folder contains:
-* **Code File:** The actual implementation scripts for that phase.
-* **Documentation:** A detailed file tracking the evolution of the code alongside a user manual explaining how to implement it.
-
-
-* **Benchmarking File:** Provided towards the end of the repository, this file tests and demonstrates the computational speed of the library.
-* **Installation Guide:** The final file contains step-by-step instructions on how to install and configure this hybrid package on your local system.
+* **`README.md` (Root):** This file. Acts as the high-level overview of the project, including quick installation steps and a core usage manual.
+* **`phase_wise_plan`:** Details the structural execution roadmap and chronological phase-by-phase development goals.
+* **Phase-Wise Folders (`/Phase_01`, `/Phase_02`, etc.):** The sequential core of the project. To keep the repository clean, **all documentation is embedded directly inside the README of each folder** (no external PDFs or Word files). Each folder contains:
+  * **`README.md`:** The complete developer documentation, algorithmic deep-dive, and user implementation guide for that specific phase.
+  * **`Code Files`:** The clean python/julia engine implementation scripts built during that phase.
+* **`benchmarking/`:** Contains benchmarking scripts and test metrics comparing the computational performance of this hybrid architecture against standard linear algebra layouts.
 
 ---
 
