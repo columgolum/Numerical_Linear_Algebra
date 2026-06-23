@@ -51,9 +51,11 @@ The primary motivation behind this build is to develop a deep, computational und
 
 ## Current Progress
 
-The project development is actively underway, and the code is currently completed up to **Phase 2**.
+The project development is actively underway, and the source code has been fully deployed up to **Phase 3**.
 
-| Phase | Code Status | Documentation Status | Availability |
-| --- | --- | --- | --- |
+| Phase / Release | Code Status | Documentation Status | Availability |
+| :--- | :--- | :--- | :--- |
 | **Phase 1** | Completed | Completed | Uploaded |
-| **Phase 2** | Completed | In Progress (expected in a few days) | Uploading Soon |
+| **Phase 2** | Completed | In Progress | Uploaded (Docs Pending) |
+| **Phase 3** | Completed | In Progress | Uploaded (Docs Pending) |
+| **Package v0.1.0** | Stable Release | In Progress | Uploaded (Docs Pending) |
