@@ -1,0 +1,9 @@
+setup.py
+src/NLA_athsh/__init__.py
+src/NLA_athsh/matrix_engine/__init__.py
+src/NLA_athsh/vector_engine/__init__.py
+src/NLA_atsh.egg-info/PKG-INFO
+src/NLA_atsh.egg-info/SOURCES.txt
+src/NLA_atsh.egg-info/dependency_links.txt
+src/NLA_atsh.egg-info/requires.txt
+src/NLA_atsh.egg-info/top_level.txt

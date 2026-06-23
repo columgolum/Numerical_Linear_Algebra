@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: NLA_atsh
+Version: 0.1.0
+Summary: High-Performance Hybrid Python-Julia Numerical Linear Algebra Package
+Author: Atharv Shrivastav
+Requires-Python: >=3.7
+Requires-Dist: juliacall
