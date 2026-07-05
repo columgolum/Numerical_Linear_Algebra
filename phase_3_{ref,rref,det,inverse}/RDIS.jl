@@ -96,13 +96,14 @@ function solveLSE(D::Matrix{<:Number})
         for j in 1:(sz[2]-1)
             if M[i, j] != 0
                 count += 1
-                break # Pivot is found, hence this row will give a valid solution hence break
+                break # if pivot found then the row will give a valid answer, hence break and start from next row
             end
         end
         
-        # Check if in A|b the last column is non-zero while all other columns are zero, which indicates no solution exists
+        # in A|b : b = M[i, sz[2]]
+        # if b is non zero, but the matrix A has zero rows then it means no solution
         if count == 0 && M[i, sz[2]] != 0
-            return ("No solution exists",) # Wrap in a tuple to match your Python unpacker expectations
+            return ("No solution exists",) # returns a tuple which is resolved accordingly at the python junction
         end
     end
     if rank < (sz[2]-1)
