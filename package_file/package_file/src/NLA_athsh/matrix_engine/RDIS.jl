@@ -85,28 +85,115 @@ end
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
-function solveLSE(D::Matrix{<:Number})
-    M ,rank,nullity = ref(D)
-    sz = size(M)
-    for i in 1:sz[1]
-        count = 0 
-        for j in 1:(sz[2]-1)
-            if M[i, j] != 0
-                count += 1
-                break # Pivot is found, hence this row will give a valid solution hence break
+function solveLSE(D::Matrix{<:Number}, mode::String)
+    sz = size(D)
+    
+    # Take out the matrix A and vector b from the augmented matrix D
+    nov = sz[2] - 1 # nov = number of variables
+    A = @view D[:, 1:nov]
+    b = copy(D[:, sz[2]])
+
+    if mode == "GE"
+        M, rank, nullity = ref(D)
+        for i in 1:sz[1]
+            count = 0 
+            for j in 1:1:nov
+                if M[i, j] != 0
+                    count += 1
+                    break 
+                end
+            end
+            
+            # Check if in A|b the last column is non-zero while all other columns are zero
+            if count == 0 && M[i, sz[2]] != 0
+                return ("No solution exists",) 
             end
         end
         
-        # Check if in A|b the last column is non-zero while all other columns are zero, which indicates no solution exists
-        if count == 0 && M[i, sz[2]] != 0
-            return ("No solution exists",) # Wrap in a tuple to match your Python unpacker expectations
+        if rank < nov
+            particular_vector, linear_combination_of_vectors = solutions(M, rank)
+            return "infinite soln", particular_vector, linear_combination_of_vectors
+        else
+            return "Unique solution", solutions(M, rank) 
         end
-    end
-    if rank < (sz[2]-1)
-        particular_vector ,linear_combination_of_vectors = solutions(M,rank)
-        return "infinite soln" , particular_vector ,linear_combination_of_vectors
+        
+    elseif mode == "LU"
+        P, L, U, rank = LU(A)
+        sz_of_L = size(L)
+        b_new = P * b 
+        y = zeros(Float64, sz_of_L[2], 1)
+        
+        @inbounds for i in 1:1:sz_of_L[1]
+            b_comp = b_new[i] 
+            @inbounds @simd  for doraemon in i-1:-1:1
+                b_comp -= L[i, doraemon] * y[doraemon]
+            end
+            y[i] = b_comp
+        end  
+        
+        for i in 1:sz[1]
+            count = 0 
+            for j in 1:1:nov
+                if U[i, j] != 0
+                    count += 1
+                    break 
+                end
+            end
+            
+            if count == 0 && y[i] != 0
+                return ("No solution exists",) 
+            end
+        end
+        # ------------------------------
+        
+        if rank < nov
+            particular_vector, linear_combination_of_vectors = solutions(U, y, rank) 
+            return "infinite soln", particular_vector, linear_combination_of_vectors
+        else
+            return "Unique solution", solutions(U, y, rank) 
+        end
+        
+    elseif mode == "QR"
+        Q, R = QR(A)
+        
+        b_new = transpose(Q) * b
+        
+        for i in 1:sz[1]
+            count = 0 
+            for j in 1:1:nov
+                if R[i, j] != 0
+                    count += 1
+                    break 
+                end
+            end
+            
+            if count == 0 && b_new[i] != 0
+                return ("No solution exists",) 
+            end
+        end
+        # ------------------------------
+        rank = 0
+        for i in 1:1:sz[1]
+            row_vec = @view R[i, 1:nov]
+            for j in 1:1:nov
+                if row_vec[j] == 0 
+                    nothing
+                else
+                    rank += 1
+                    break
+                end
+            end
+        end
+
+        if rank < nov 
+            particular_vector, linear_combination_of_vectors = solutions(R, b_new, rank) 
+            return "infinite soln", particular_vector, linear_combination_of_vectors
+        else
+            return "Unique solution", solutions(R, b_new, rank) 
+        end
+        
     else
-        return "Unique solution",solutions(M,rank) 
+        throw(ArgumentError("Supported modes are = GE, LU, QR"))
     end
 end
 #-------------------------------------------------------------------------------------------------------------------------------------------
