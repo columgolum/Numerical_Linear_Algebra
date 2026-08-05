@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="dumbpy", # (or "NLA_athsh" depending on your package name)
+    name="NLA_athsh", # (or "NLA_athsh" depending on your package name)
     version="0.2.0",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
