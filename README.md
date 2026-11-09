@@ -38,24 +38,27 @@ The primary motivation behind this build is to develop a deep, computational und
 
 ---
 
-##  Repository Structure
+## Repository Structure
 
-* **`README.md` (Root):** This file. Acts as the high-level overview of the project, including quick installation steps and a core usage manual.
-* **`phase_wise_plan`:** Details the structural execution roadmap and chronological phase-by-phase development goals.
-* **Phase-Wise Folders (`/Phase_01`, `/Phase_02`, etc.):** The sequential core of the project. To keep the repository clean, **all documentation is embedded directly inside the README of each folder** (no external PDFs or Word files). Each folder contains:
-  * **`README.md`:** The complete developer documentation, algorithmic deep-dive, and user implementation guide for that specific phase.
-  * **`Code Files`:** The clean python/julia engine implementation scripts built during that phase.
-* **`benchmarking/`:** Contains benchmarking scripts and test metrics comparing the computational performance of this hybrid architecture against standard linear algebra layouts.
+* **`README.md`:** This file. The high-level overview, installation, and progress.
+* **`phase_wise_plan/`:** The phase-by-phase development roadmap.
+* **`phase[1]_Vectors/`:** Phase 1, vector operations.
+* **`phase_2_Matrix/`:** Phase 2, matrix architecture and basic operations.
+* **`phase_3_{ref,rref,det,inverse}/`:** Phase 3, row reduction and linear solvers.
+* **`phase_4_decompositions/`:** Phase 4, LU, QR, and SVD decompositions.
+* **`package_file/`:** The installable `NLA_athsh` package (Python frontend, Julia backend), including the eigensolver module (Phase 5).
+
+Each phase folder has its own `README.md` that lists the functions in that phase, what each one does, and usage notes. Documentation lives inside these READMEs rather than in separate PDF or Word files.
 
 ---
 
 ## Current Progress
 
-The project development is actively underway, and the source code has been fully deployed up to **Phase 3**.
-
-| Phase / Release | Code Status | Documentation Status | Availability |
-| :--- | :--- | :--- | :--- |
-| **Phase 1** | Completed | Completed | Uploaded |
-| **Phase 2** | Completed | In Progress | Uploaded (Docs Pending) |
-| **Phase 3** | Completed | In Progress | Uploaded (Docs Pending) |
-| **Package v0.1.0** | Stable Release | In Progress | Uploaded (Docs Pending) |
+| Phase | Topic | Status |
+| :--- | :--- | :--- |
+| **Phase 1** | Vector Space Foundations | Done |
+| **Phase 2** | Matrix Architectures | Done |
+| **Phase 3** | Row Reductions & Linear Solvers | Done |
+| **Phase 4** | Matrix Decompositions | In progress: LU done, QR correction in progress, SVD pending |
+| **Phase 5** | Spectral Theory & Eigensolvers | Done |
+| **Phase 6** | Applied Machine Learning Models | Pending |
