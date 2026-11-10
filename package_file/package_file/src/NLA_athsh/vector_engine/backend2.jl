@@ -35,11 +35,11 @@ function scale(u::Vector{<:Number},sf::Number)
 end
 
 function mag(u::Vector{<:Number})
-    a = 0
+    a = 0.0
     @inbounds @simd for i in 1:1:size(u)[1]
-        a += u[i]^2
+        a += abs2(u[i])
     end
-    return a^0.5
+    return sqrt(a)
 end
 
 function dot(u::Vector{<:Number},v::Vector{<:Number})
