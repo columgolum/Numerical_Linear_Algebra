@@ -5,6 +5,9 @@ function Hessenberg_form(M_raw :: AbstractMatrix{<:Number})
     =#
     H = Float64.(M_raw)
     sz = size(H)
+    if sz[1] != sz[2] 
+        throw("Hessenberg matrix requires square matrices")
+    end
     
     if sz[1] > 2
      @inbounds @simd for i in 1:1:(sz[1]-2)
@@ -254,25 +257,41 @@ end
 
 function eigenvectors(A::Matrix{<:Number}; tol=1e-10)
     n = size(A, 1)
+    scale = max(maximum(abs, A), 1e-300)   # size of the matrix, so the tolerances are relative
     eigenvals = eigenvalues(A)
-    all_eigenvectors = Any[]
     
+    # A repeated eigenvalue appears several times in eigenvals, but its null space must be
+    # computed only once (otherwise every eigenvector would be returned several times).
+    # Repeated/defective eigenvalues come out slightly inexact, so "same" means "within 1e-4 * scale".
+    distinct = ComplexF64[]
     for lamda in eigenvals
+        if !any(abs(lamda - d) <= 1e-4 * scale for d in distinct)
+            push!(distinct, lamda)
+        end
+    end
+    
+    all_eigenvectors = Matrix{ComplexF64}[]
+    for lamda in distinct
         #  Construct (A - lamda*I)
         D = ComplexF64.(A)
         for i in 1:n
             D[i, i] -= lamda
         end
         
-        # 2. Reduce using custom eigensolver GE
-        U, rank = ref_eigen(D, tol=tol)
+        # Reduce using custom eigensolver GE. If no null space is seen, the computed lamda was a
+        # little inexact, so loosen the tolerance step by step before giving up.
+        found = false
+        for t in (tol, 1e-8, 1e-6, 1e-4)
+            U, rank = ref_eigen(D, tol = t * scale)
+            if rank < n
+                append!(all_eigenvectors, nullspace_eigen(U, tol = t * scale))
+                found = true
+                break
+            end
+        end
         
-        # 3. Extract the null space basis vectors
-        if rank < n
-            e_vecs = nullspace_eigen(U, tol=tol)
-            append!(all_eigenvectors, e_vecs)
-        else
-            append!(all_eigenvectors, ["Failed to find null space. Adjust tolerance!"])
+        if !found
+            error("Could not find an eigenvector for eigenvalue $lamda")
         end
     end
     
