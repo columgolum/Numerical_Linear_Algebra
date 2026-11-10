@@ -18,6 +18,9 @@ function matmult( x:: Matrix{<: Number} , y:: Matrix{<: Number})
         end
  
     end
+function scale(M::Matrix{<:Number}, s::Number)
+    return M .* s
+end
 
 function add(x:: Matrix{<:Number},y:: Matrix{<: Number})
     x_dim = size(x)
