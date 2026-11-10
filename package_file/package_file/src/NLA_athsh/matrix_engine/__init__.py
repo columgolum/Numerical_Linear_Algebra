@@ -78,4 +78,6 @@ class mat ():
     def eigen(u):
         eigenvalues, eigenvectors = jl.eigenvalues(u.iter()), jl.eigenvectors(u.iter())
         return [mat(v) for v in eigenvectors], eigenvalues
+    def scale(u, s):
+        return mat(jl.scale(u.iter(), s))
     
