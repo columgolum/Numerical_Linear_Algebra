@@ -77,6 +77,8 @@ function trace(M_raw ::Matrix{<:Number})
     return trace
 end
 
-
+# Shared helper: entries smaller than this (relative to the biggest entry) are treated as exact zeros.
+# Needed because floating-point elimination leaves tiny noise (like 1e-17) where the true answer is 0.
+ _zero_tol(U) = 100 * eps(Float64) * maximum(size(U)) * maximum(abs, U)
 
 
