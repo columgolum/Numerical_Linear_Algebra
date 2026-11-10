@@ -57,12 +57,12 @@ class mat ():
             status, part_sol, basis_vecs = result
             return status, mat(part_sol), [mat(v) for v in basis_vecs]
 
-       def inverse(u):
-        out = jl.inverse(u.iter())
-        # Julia returns the message "Inverse Do Not Exist" (a string) for singular matrices
-        if isinstance(out, str) or jl.isa(out, jl.AbstractString):
-            return str(out)
-        return mat(out)
+   def inverse(u):
+    out = jl.inverse(u.iter())
+    # Julia returns the message "Inverse Do Not Exist" (a string) for singular matrices
+    if isinstance(out, str) or jl.isa(out, jl.AbstractString):
+        return str(out)
+    return mat(out)
     def det(u):
         return jl.det(u.iter())
     def LU(u):
