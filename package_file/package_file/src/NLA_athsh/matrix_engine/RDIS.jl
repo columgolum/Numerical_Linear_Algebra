@@ -1,6 +1,7 @@
 function ref(M :: Matrix{<:Number})
     U = Float64.(M)
     sz = size(U)
+    tol = _zero_tol(U)  # anything this small is treated as an exact zero
     i = 1
     rank = 0
     h = 1 
@@ -9,19 +10,19 @@ function ref(M :: Matrix{<:Number})
         pivot = abs(U[i, h])
         
         # Scan ALL rows below row i in the current column h
-        segment = @view U[i+1:sz[1], h]
-      @inbounds @simd  for meow in 1:1:sz[1]-i
-            temp = abs(segment[meow]) 
+        for meow in i+1:1:sz[1]
+            temp = abs(U[meow, h]) 
             if temp > pivot # partial pivoting is occuring here
                 pivot = temp
-                pivot_row = meow + i
+                pivot_row = meow
             end
         end
         
-        # If the largest element in this column is 0 then skip to the next column
+        # If the largest element in this column is (numerically) 0 then skip to the next column
         # Because a number like 0 or near zero leads to large numbers ( when divided by 0 or near zero)
         # which leads to overflow and roundoff errors
-        if pivot == 0
+        if pivot <= tol
+            U[i:sz[1], h] .= 0.0  # clean the noise, so later "!= 0" checks are reliable
             h += 1
             continue
         end
@@ -42,6 +43,7 @@ function ref(M :: Matrix{<:Number})
             @inbounds @simd for k = 1:1:sz[2]
                 U[j, k] = U[j, k] - mbp * U[i, k]
             end
+            U[j, h_carry] = 0.0  # mbp*pivot is not always EXACTLY the entry, so force the exact zero
         end
         
         i += 1
@@ -77,6 +79,7 @@ function rref(U::Matrix{<:Number})
             end 
         end
     end
+     D[abs.(D) .<= _zero_tol(D)] .= 0.0   # remove roundoff noise such as 1e-17
     return D,rank,nullity
 end
 
@@ -91,7 +94,7 @@ function solveLSE(D::Matrix{<:Number}, mode::String)
     # Take out the matrix A and vector b from the augmented matrix D
     nov = sz[2] - 1 # nov = number of variables
     A = @view D[:, 1:nov]
-    b = copy(D[:, sz[2]])
+    b = Float64.(D[:, sz[2]])
 
     if mode == "GE"
         M, rank, nullity = ref(D)
@@ -131,6 +134,7 @@ function solveLSE(D::Matrix{<:Number}, mode::String)
             y[i] = b_comp
         end  
         
+        tolc = _zero_tol(hcat(U, y))  # noise level for the consistency check
         for i in 1:sz[1]
             count = 0 
             for j in 1:1:nov
@@ -140,7 +144,7 @@ function solveLSE(D::Matrix{<:Number}, mode::String)
                 end
             end
             
-            if count == 0 && y[i] != 0
+            if count == 0 && abs(y[i]) > tolc
                 return ("No solution exists",) 
             end
         end
@@ -153,7 +157,7 @@ function solveLSE(D::Matrix{<:Number}, mode::String)
             return "Unique solution", solutions(U, y, rank) 
         end
         
-       elseif mode == "QR"
+    elseif mode == "QR"
         Q, R = QR(A)
         b_new = transpose(Q) * b
 
@@ -179,27 +183,7 @@ function solveLSE(D::Matrix{<:Number}, mode::String)
         else
             return "Unique solution", solutions(M, rank)
         end
-        # ------------------------------
-        rank = 0
-        for i in 1:1:sz[1]
-            row_vec = @view R[i, 1:nov]
-            for j in 1:1:nov
-                if row_vec[j] == 0 
-                    nothing
-                else
-                    rank += 1
-                    break
-                end
-            end
-        end
 
-        if rank < nov 
-            particular_vector, linear_combination_of_vectors = solutions(R, b_new, rank) 
-            return "infinite soln", particular_vector, linear_combination_of_vectors
-        else
-            return "Unique solution", solutions(R, b_new, rank) 
-        end
-        
     else
         throw(ArgumentError("Supported modes are = GE, LU, QR"))
     end
@@ -266,7 +250,7 @@ function solutions(D::Matrix{<:Number},r::Number) # D = ref(A) : D is augmented 
                     nothing
                 else
                     pivot_column = row_status[i,2]
-                    b_comp = 0
+                    b_comp = 0.0
                     @inbounds @simd  for doraemon in pivot_column+1:1:sz[2]-1
                         b_comp -= U[i,doraemon]*basis_vector[doraemon]
                                      end
@@ -283,98 +267,59 @@ end
 end
 #------------------------------------------------------------------------------------------------------------------------------------------------
 function inverse(M::Matrix{<:Number})
+    # Gauss-Jordan elimination with partial pivoting, applied to [M | I]
     sz = size(M)
-     U = Float64.(M)
     if sz[1] != sz[2]
         return throw(ArgumentError("Non Square Matrices dont have inverse"))
-    #= elseif ref(M)[2] <sz[2]
-        return "Inverse do NOT exist" =#
-    elseif ref(M)[2] < sz[2]
-        return "Inverse Do Not Exist"
-    else
-       I_mat =  zeros(Float64,sz[1],sz[2])
-        for i in 1:1:sz[1]
-            I_mat[i,i] = 1
-        end
-          i =1
- while i<= sz[1] # Selects/locks the rows(selection of pivot row), The pivot is selected in this loop onlu
-            pivot = 0
-            h_carry = 0
-            h =1
-  while h<=sz[2]
-                if U[i,h] != 0
-                    pivot = U[i,h]
-                    h_carry = h
-                    break
-                else
-                    meow = i+1
-                    
-                    if meow <= sz[1]
-            while meow<= sz[1]
-                            if  U[meow,h] != 0
-                            
-                                temp1 = U[meow, :]
-                                U[meow, :] = U[i, :]
-                                U[i, :] = temp1
-
-                                temp2 = I_mat[meow, :]
-                                I_mat[meow, :] = I_mat[i, :]
-                                I_mat[i, :] = temp2
-                                break                                   
-                            else
-                                if meow != sz[1]
-                                    meow+=1
-                                else # meow == sz[1]
-                                    h+=1
-                                    break
-                                end
-                            end
-                        end
-                    else
-                        h+=1
-                    end
-                end
-            end  
-            if pivot == 0
-                i+=1
-                continue
-            end   
-@inbounds @simd  for j in i+1:1:sz[1] # its selects rows on which row operation is about to occur, multiplier is also selected in this loop
-                mbp = U[j,h_carry]/pivot # mbp = multiplier by pivot i.e multiplier/pivot
-@inbounds @simd for k = 1:1:sz[2]
-                    U[j,k] = U[j,k]-mbp*U[i,k]
-                     I_mat[j,k] = I_mat[j,k]-mbp*I_mat[i,k]
-                end
-            end
-            i+=1
     end
-    for i = sz[1]:-1:1 # goes from last row to the first row
-        pivot = 0
-        h_carry = 0
-        for h in 1:1:sz[2] # traverses the selected row
-            if U[i,h] != 0 # if a pivot is found then 
-                h_carry = h
-                break
+    n = sz[1]
+    U = Float64.(M)
+    tol = _zero_tol(U)
+    I_mat = zeros(Float64, n, n)
+    for i in 1:1:n
+        I_mat[i,i] = 1.0
+    end
+
+    for c in 1:1:n  # c = current pivot column (and pivot row)
+        # partial pivoting: pick the largest entry in column c from row c downwards
+        p = c
+        best = abs(U[c,c])
+        for r in c+1:1:n
+            if abs(U[r,c]) > best
+                best = abs(U[r,c])
+                p = r
             end
         end
-        if h_carry != 0 # if h_carry is there then a pivot is found, hence only then we will proceed to do backward( OR upward) elimination 
-            pivot = U[i,h_carry] 
-            for meow in 1:1:sz[2]
-                U[i,meow] = U[i,meow]/pivot
-                I_mat[i,meow] = I_mat[i,meow]/pivot
+        if best <= tol   # numerically zero pivot => singular matrix
+            return "Inverse Do Not Exist"
+        end
+        if p != c
+            tmp = U[c, :]; U[c, :] = U[p, :]; U[p, :] = tmp
+            tmp = I_mat[c, :]; I_mat[c, :] = I_mat[p, :]; I_mat[p, :] = tmp
+        end
+
+        pivot = U[c,c]
+        for k in 1:1:n   # scale the pivot row so the pivot becomes 1
+            U[c,k] = U[c,k]/pivot
+            I_mat[c,k] = I_mat[c,k]/pivot
+        end
+
+        for r in 1:1:n   # eliminate column c from every OTHER row (above and below)
+            if r == c
+                continue
             end
-            for j in i-1:-1:1 # selects/ locks the rows above the pivot row( selected by i pointer) 
-                    mbp = U[j,h_carry]
-                    for k in 1:1:sz[2]
-                        U[j,k] = U[j,k]-mbp*U[i,k]
-                        I_mat[j,k] = I_mat[j,k]-mbp*I_mat[i,k]
-                    end
-            end 
+            f = U[r,c]
+            if f == 0
+                continue
+            end
+            @inbounds @simd for k in 1:1:n
+                U[r,k] = U[r,k] - f*U[c,k]
+                I_mat[r,k] = I_mat[r,k] - f*I_mat[c,k]
+            end
+            U[r,c] = 0.0
         end
     end
     return I_mat
-              
-end  
 end
 #----------------------------------------------------------------------------------------------------------------------------------------------------
 function det(M::Matrix{<:Number})
@@ -383,6 +328,7 @@ function det(M::Matrix{<:Number})
     if sz[2] != sz[1]
         return throw(ArgumentError("Non-Square Matrices dont have determinant"))
     end
+    tol = _zero_tol(U)
     i = 1
     swaps = 0
     h = 1
@@ -392,19 +338,16 @@ function det(M::Matrix{<:Number})
         pivot = abs(U[i, h])
         
         # Scan ALL rows below row i in the current column h
-        segment = @view U[i+1:sz[1], h]
-      @inbounds @simd  for meow in 1:1:sz[1]-i
-            temp = abs(segment[meow]) 
+        for meow in i+1:1:sz[1]
+            temp = abs(U[meow, h]) 
             if temp > pivot # partial pivoting is occuring here
                 pivot = temp
-                pivot_row = meow + i
+                pivot_row = meow
             end
         end
         
-        # If the largest element in this column is 0 then skip to the next column
-        # Because a number like 0 or near zero leads to large numbers ( when divided by 0 or near zero)
-        # which leads to overflow and roundoff errors
-        if pivot == 0
+        # If the largest element in this column is (numerically) 0 then skip to the next column
+        if pivot <= tol
             h += 1
             continue
         end
@@ -434,13 +377,12 @@ function det(M::Matrix{<:Number})
         h += 1
     end
     
-    if  rank<sz[2]
-        return 0
-    else
-        determinant = 1
-        for i in 1:sz[1]
-            determinant *= U[i, i]
-        end
+    if rank < sz[2]
+        return 0.0
+    end
+    determinant = 1.0
+    for i in 1:sz[1]
+        determinant *= U[i, i]
     end
     return determinant*(-1)^swaps
 end
