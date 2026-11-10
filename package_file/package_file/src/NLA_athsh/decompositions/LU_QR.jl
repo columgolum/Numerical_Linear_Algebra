@@ -1,6 +1,7 @@
 function LU(M :: AbstractMatrix{<:Number})
     U = Float64.(M)
     sz = size(U)
+    tol = _zero_tol(U)  # anything this small is treated as an exact zero
     L = zeros(Float64, sz[1], sz[1])
     P = zeros(Float64, sz[1], sz[1])
   @inbounds @simd  for modi in 1:1:sz[1]
@@ -16,19 +17,19 @@ function LU(M :: AbstractMatrix{<:Number})
         pivot = abs(U[i, h])
         
         # Scan ALL rows below row i in the current column h
-        segment = @view U[i+1:sz[1], h]
-    @inbounds @simd for meow in 1:1:sz[1]-i
-            temp = abs(segment[meow]) 
+        for meow in i+1:1:sz[1]
+            temp = abs(U[meow, h]) 
             if temp > pivot # partial pivoting is occuring here
                 pivot = temp
-                pivot_row = meow + i
+                pivot_row = meow
             end
         end
         
-        # If the largest element in this column is 0 then skip to the next column
+        # If the largest element in this column is (numerically) 0 then skip to the next column
         # Because a number like 0 or near zero leads to large numbers ( when divided by 0 or near zero)
         # which leads to overflow and roundoff errors
-        if pivot == 0
+        if pivot <= tol
+            U[i:sz[1], h] .= 0.0  # clean the noise, so later "!= 0" checks are reliable
             h += 1
             continue
         end
@@ -61,6 +62,7 @@ function LU(M :: AbstractMatrix{<:Number})
             @inbounds @simd for k = 1:1:sz[2]
                 U[j, k] = U[j, k] - mbp * U[i, k]
             end
+            U[j, h_carry] = 0.0  # mbp*pivot is not always EXACTLY the entry, so force the exact zero
         end
         
         i += 1
@@ -171,7 +173,7 @@ function solutions(U::Matrix{<:Number},b_raw::AbstractVecOrMat,r::Int64)
                     nothing
                 else
                     pivot_column = row_status[i,2]
-                    b_comp = 0
+                    b_comp = 0.0
                     @inbounds @simd  for doraemon in pivot_column+1:1:sz[2]
                         b_comp -= U[i,doraemon]*basis_vector[doraemon]
                                      end
