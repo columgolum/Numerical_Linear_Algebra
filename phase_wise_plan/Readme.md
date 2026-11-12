@@ -24,5 +24,4 @@
 * **Files:** eigenvalue finder and eigenvector finder (`eigen` module). *Done.*
 
 ### 🔹 Phase 6: Applied Mathematics
-* **Features:** Applications of linear algebra: **Linear Regression** (least squares) and **Runge-Kutta methods** for solving ODEs.
-* **Files:** linear regression and Runge-Kutta modules. *Pending.*
+* **Features:** Applications of linear algebra: **Linear Regression** 
