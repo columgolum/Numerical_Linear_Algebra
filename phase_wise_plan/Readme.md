@@ -14,9 +14,9 @@
 
 ### 🔹 Phase 4: Matrix Decompositions
 * **Features:** Numerically stable matrix factorizations:
-  * **LU Decomposition** with partial pivoting ($PA=LU$). *Done.*
-  * **QR Decomposition** via Householder reflectors. *Done.*
-  * **Singular Value Decomposition (SVD)** ($A=U\Sigma V^T$). "Done."
+  * **LU Decomposition** with partial pivoting ($PA=LU$).
+  * **QR Decomposition** via Householder reflectors. 
+  * **Singular Value Decomposition (SVD)** ($A=U\Sigma V^T$). 
 * **Files:** LU, QR, and SVD (`phase_4_decompositions`).
 
 ### 🔹 Phase 5: Spectral Theory & Eigensolvers
