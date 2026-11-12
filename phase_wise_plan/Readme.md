@@ -15,14 +15,14 @@
 ### 🔹 Phase 4: Matrix Decompositions
 * **Features:** Numerically stable matrix factorizations:
   * **LU Decomposition** with partial pivoting ($PA=LU$). *Done.*
-  * **QR Decomposition** via Householder reflectors. *Done, correction in progress.*
-  * **Singular Value Decomposition (SVD)** ($A=U\Sigma V^T$). *Pending.*
+  * **QR Decomposition** via Householder reflectors. *Done.*
+  * **Singular Value Decomposition (SVD)** ($A=U\Sigma V^T$). "Done."
 * **Files:** LU, QR, and SVD (`phase_4_decompositions`).
 
 ### 🔹 Phase 5: Spectral Theory & Eigensolvers
 * **Features:** Eigenvalue and eigenvector finders for square matrices.
 * **Files:** eigenvalue finder and eigenvector finder (`eigen` module). *Done.*
 
-### 🔹 Phase 6: Applied Machine Learning Models
+### 🔹 Phase 6: Applied Mathematics
 * **Features:** Applications of linear algebra: **Linear Regression** (least squares) and **Runge-Kutta methods** for solving ODEs.
 * **Files:** linear regression and Runge-Kutta modules. *Pending.*
